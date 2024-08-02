@@ -1,31 +1,20 @@
-import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
-import Redis from 'ioredis';
+import { Injectable, Inject,  } from '@nestjs/common';
+import { Cache,  } from 'cache-manager';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
 
 @Injectable()
-export class RedisService implements OnModuleInit, OnModuleDestroy {
-  private client: Redis
+export class RedisService {
+  constructor(@Inject(CACHE_MANAGER) private cacheManager: Cache) {}
 
-  
-  onModuleInit() {
-    this.client = new Redis({
-      host:  process.env.REDIS_HOST,
-      port:  6379,          
-    });
-  }
-
-  onModuleDestroy() {
-    this.client.quit();
-  }
-
-  async set(key: string, value: string, duration: number) {
-    await this.client.set(key, value, 'EX', duration);
+  async set(key: string, value: string, ttl: number) {
+    await this.cacheManager.set(key, value, ttl);
   }
 
   async get(key: string): Promise<string> {
-    return await this.client.get(key);
+    return await this.cacheManager.get(key);
   }
 
   async del(key: string) {
-    await this.client.del(key);
+    await this.cacheManager.del(key);
   }
 }

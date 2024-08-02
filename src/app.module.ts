@@ -1,4 +1,5 @@
-import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { MiddlewareConsumer,Module, NestModule } from '@nestjs/common';
+import { CacheModule } from '@nestjs/cache-manager';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { LoggerMiddleware } from './utils/logging';
@@ -10,9 +11,13 @@ import { CountriesModule } from './countries/countries.module';
 import { HttpModule, HttpService } from '@nestjs/axios';
 import { AxiosModule } from './common/axios/axios.module';
 import { RedisService } from './redis/redis.service';
+import { ConfigService } from '@nestjs/config';
 
 @Module({
   imports: [
+    CacheModule.register({
+      isGlobal: true,
+    }),
     CustomLoggerModule,
     AxiosModule,
     RateLimitingModule,
@@ -21,7 +26,13 @@ import { RedisService } from './redis/redis.service';
     HttpModule,
   ],
   controllers: [AppController],
-  providers: [AppService,RedisService, CountriesService, HttpService],
+  providers: [
+    AppService,
+    RedisService,
+    ConfigService,
+    CountriesService,
+    HttpService,
+  ],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
