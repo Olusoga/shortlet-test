@@ -4,6 +4,13 @@ import { utilities as nestWinstonModuleUtilities } from 'nest-winston';
 import * as fs from 'fs';
 import * as path from 'path';
 
+const logDirectory = 'logs';
+
+// Ensure the logs directory exists
+if (!fs.existsSync(logDirectory)) {
+  fs.mkdirSync(logDirectory);
+}
+
 const customLevels = {
   levels: {
     fatal: 0,
@@ -29,12 +36,6 @@ const customLevels = {
 
 addColors(customLevels.colors);
 
-const logDir = path.join(__dirname, '..', '..', 'logs');
-
-if (!fs.existsSync(logDir)) {
-  fs.mkdirSync(logDir, { recursive: true });
-}
-
 const winstonLogger = createLogger({
   levels: customLevels.levels,
   level: 'silly',
@@ -58,8 +59,8 @@ const winstonLogger = createLogger({
         nestWinstonModuleUtilities.format.nestLike(),
       ),
     }),
-    new transports.File({ filename: path.join(logDir, 'error.log'), level: 'error' }),
-    new transports.File({ filename: path.join(logDir, 'combined.log') }),
+    new transports.File({ filename: path.join(logDirectory, 'error.log'), level: 'error' }),
+    new transports.File({ filename: path.join(logDirectory, 'combined.log') }),
   ],
 });
 

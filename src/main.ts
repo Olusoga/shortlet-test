@@ -11,11 +11,6 @@ import * as path from 'path';
 
 async function bootstrap() {
 
-  const logDir = path.join(__dirname, '..', 'logs');
-  
-  if (!fs.existsSync(logDir)) {
-    fs.mkdirSync(logDir, { recursive: true });
-  }
   const app = await NestFactory.create(AppModule);
 
   app.use(helmet());
