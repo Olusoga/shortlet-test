@@ -3,13 +3,13 @@ import { CountriesService } from './countries.service';
 import { CountryDetailsDto } from './dto/country-details.dto';
 import { RedisService } from 'src/redis/redis.service';
 
-@Controller('countries')
+@Controller('api')
 export class CountriesController {
   constructor(
     private readonly countriesService: CountriesService,
     private readonly redisService: RedisService,) {}
 
-  @Get()
+  @Get('countries')
   async getCountries(@Query() query) {
     const cacheKey = `countries_${JSON.stringify(query)}`;
     const cachedData = await this.redisService.get(cacheKey);
@@ -23,7 +23,7 @@ export class CountriesController {
     return countries;
   }
 
-  @Get('/regions')
+  @Get('/countries/regions')
   async getRegions() {
     const cacheKey = `regions`;
     const cachedData = await this.redisService.get(cacheKey);
@@ -33,12 +33,21 @@ export class CountriesController {
     }
 
     const regions = await this.countriesService.fetchRegions();
-    console.log(regions)
     await this.redisService.set(cacheKey, JSON.stringify(regions), 3600); 
     return regions;
   }
 
-  @Get(':name')
+  @Get('/countries/languages')
+  async getLanguages() {
+    return this.countriesService.fetchLanguages();
+  }
+
+  @Get('countries/statistics')
+  async getStatistics() {
+    return this.countriesService.fetchStatistics();
+  }
+
+  @Get('/countries/:name')
   async getCountryByName(
     @Param('name') name: string,
   ): Promise<CountryDetailsDto> {
@@ -53,6 +62,5 @@ export class CountriesController {
     await this.redisService.set(cacheKey, JSON.stringify(country), 3600);
     return country;
   }
-
   
 }

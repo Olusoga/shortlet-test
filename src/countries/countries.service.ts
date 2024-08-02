@@ -57,6 +57,7 @@ export class CountriesService {
     try {
       const response = await this.http.get(`/name/${name}`);
       const country = response.data[0];
+      console.log(country)
 
       if (!country) {
         throw new HttpException('Country not found', HttpStatus.NOT_FOUND);
@@ -83,7 +84,6 @@ export class CountriesService {
   private async fetchCountriesByRegion(region: string): Promise<any[]> {
 
     const response = await this.http.get(`/region/${region}`);
-    const country = response.data[0];
     try {
      
       this.logger.log(`Fetched ${response.data.length} countries for region ${region}`);
@@ -122,5 +122,77 @@ export class CountriesService {
     }
 
     return regions;
+  }
+
+  async fetchLanguages(): Promise<any> {
+    try {
+        const response = await this.http.get('/all');
+        const countries = response.data;
+       const languages = {};
+      
+      countries.forEach(country => {
+        const countryLanguages = country.languages || {};
+        Object.keys(countryLanguages).forEach(language => {
+          if (!languages[language]) {
+            languages[language] = { countries: [], totalSpeakers: 0 };
+          }
+          languages[language].countries.push({
+            name: country.name.common,
+            population: country.population,
+          });
+          languages[language].totalSpeakers += country.population;
+        });
+      });
+
+      return languages;
+    } catch (error) {
+      this.logger.error(`Failed to fetch languages data`, error.message);
+      throw new HttpException(
+        `Failed to fetch languages data`,
+        HttpStatus.BAD_REQUEST
+      );
+    }
+  }
+
+  async fetchStatistics(): Promise<any> {
+    try {
+        const response = await this.http.get('/all');
+        const countries = response.data
+      let totalCountries = countries.length;
+      let largestCountry = countries[0];
+      let smallestCountry = countries[0];
+      let mostSpokenLanguage = { language: '', speakers: 0 };
+
+      const languageSpeakers = {};
+
+      countries.forEach((country) => {
+        if (country.area > largestCountry.area) largestCountry = country;
+        if (country.population < smallestCountry.population) smallestCountry = country;
+
+        const countryLanguages = country.languages || {};
+        Object.keys(countryLanguages).forEach((language) => {
+          if (!languageSpeakers[language]) {
+            languageSpeakers[language] = 0;
+          }
+          languageSpeakers[language] += country.population;
+        });
+      });
+
+      Object.keys(languageSpeakers).forEach((language) => {
+        if (languageSpeakers[language] > mostSpokenLanguage.speakers) {
+          mostSpokenLanguage = { language, speakers: languageSpeakers[language] };
+        }
+      });
+
+      return {
+        totalCountries,
+        largestCountry,
+        smallestCountry,
+        mostSpokenLanguage,
+      };
+    } catch (error) {
+      this.logger.error('Failed to fetch statistics data', error.message)
+      throw new HttpException('Failed to fetch statistics data', HttpStatus.BAD_REQUEST);
+    }
   }
 }
