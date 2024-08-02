@@ -1,22 +1,15 @@
-// src/countries/dto/country-query.dto.ts
-import { IsOptional, IsString, IsInt, Min } from 'class-validator';
+import { ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CountryQueryDto {
-  @IsOptional()
-  @IsString()
-  readonly region?: string;
+  @ApiPropertyOptional({ description: 'Filter by region' })
+  region?: string;
 
-  @IsOptional()
-  @IsString()
-  readonly sortBy?: string;
+  @ApiPropertyOptional({ description: 'Sort by field' })
+  sortBy?: string;
 
-  @IsOptional()
-  @IsInt()
-  @Min(1)
-  readonly page?: number;
+  @ApiPropertyOptional({ description: 'Page number', default: 1 })
+  page?: number;
 
-  @IsOptional()
-  @IsInt()
-  @Min(1)
-  readonly limit?: number;
+  @ApiPropertyOptional({ description: 'Number of items per page', default: 10 })
+  limit?: number;
 }
