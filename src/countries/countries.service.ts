@@ -1,12 +1,14 @@
-import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Inject, Injectable, Logger } from '@nestjs/common';
 import { AxiosInstance } from 'axios';
 import { AXIOS_INSTANCE_TOKEN } from 'src/common/axios/axios.provider';
 import { CountryQueryDto } from './dto/country-query.dto';
 import { CountryDetailsDto } from './dto/country-details.dto';
+import { CustomLogger } from 'src/customLogger/custom_logger.service';
 
 @Injectable()
 export class CountriesService {
   constructor(
+    private readonly logger: CustomLogger,
     @Inject(AXIOS_INSTANCE_TOKEN) private readonly http: AxiosInstance,
   ) {}
 
@@ -78,25 +80,47 @@ export class CountriesService {
     }
   }
 
+  private async fetchCountriesByRegion(region: string): Promise<any[]> {
+
+    const response = await this.http.get(`/region/${region}`);
+    const country = response.data[0];
+    try {
+     
+      this.logger.log(`Fetched ${response.data.length} countries for region ${region}`);
+      return response.data;
+    } catch (error) {
+      this.logger.error(`Failed to fetch countries data for region ${region}`, error.message);
+      throw new HttpException(
+        `Failed to fetch countries data for region ${region}`,
+        HttpStatus.BAD_REQUEST
+      );
+    }
+  }
+
   async fetchRegions(): Promise<any> {
-    const countries = await this.fetchAllCountries({});
+    const regionsList = ['Africa', 'Americas', 'Asia', 'Europe', 'Oceania', 'Antarctic', 'Caribbean'];
     const regions = {};
 
-    countries.data.forEach((country) => {
-      const region = country.region || 'Unknown';
-      if (!regions[region]) {
-        regions[region] = { countries: [], totalPopulation: 0 };
+    for (const region of regionsList) {
+      try {
+        const countries = await this.fetchCountriesByRegion(region);
+        regions[region] = {
+          countries: countries.map(country => ({
+            name: country.name.common,
+            population: country.population,
+            languages: country.languages,
+          })),
+          totalPopulation: countries.reduce((sum, country) => sum + country.population, 0),
+        };
+      } catch (error) {
+        this.logger.error(`Failed to process region ${region}`, error.message);
+        throw new HttpException(
+            `Failed to process region ${region}`,
+            HttpStatus.BAD_REQUEST
+          );
       }
-      const countryInfo = {
-        name: country.name.common,
-        population: country.population,
-        languages: country.languages,
-      };
-      regions[region].countries.push(countryInfo);
-      regions[region].totalPopulation += country.population;
-    });
+    }
 
     return regions;
   }
-
 }
