@@ -41,13 +41,13 @@ const winstonLogger = createLogger({
       }
       return logMessage;
     }),
-    format.colorize({ all: true })
+    format.colorize({ all: true }),
   ),
   transports: [
     new transports.Console({
       format: format.combine(
         format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
-        nestWinstonModuleUtilities.format.nestLike()
+        nestWinstonModuleUtilities.format.nestLike(),
       ),
     }),
     new transports.File({ filename: 'logs/error.log', level: 'error' }),

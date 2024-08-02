@@ -12,7 +12,14 @@ import { HttpModule, HttpService } from '@nestjs/axios';
 import { AxiosModule } from './common/axios/axios.module';
 
 @Module({
-  imports: [CustomLoggerModule,AxiosModule,RateLimitingModule, ConfigModule, CountriesModule,HttpModule ],
+  imports: [
+    CustomLoggerModule,
+    AxiosModule,
+    RateLimitingModule,
+    ConfigModule,
+    CountriesModule,
+    HttpModule,
+  ],
   controllers: [AppController],
   providers: [AppService, CountriesService, HttpService],
 })
