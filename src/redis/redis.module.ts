@@ -3,7 +3,6 @@ import { CacheModule } from '@nestjs/cache-manager';
 import { ConfigModule } from '@nestjs/config';
 import { RedisService } from './redis.service';
 
-
 @Module({
   imports: [
     CacheModule.register({
