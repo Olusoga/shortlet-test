@@ -1,15 +1,6 @@
 import { Injectable, LoggerService } from '@nestjs/common';
 import { createLogger, format, transports, addColors } from 'winston';
 import { utilities as nestWinstonModuleUtilities } from 'nest-winston';
-import * as fs from 'fs';
-import * as path from 'path';
-
-const logDirectory = 'logs';
-
-// Ensure the logs directory exists
-if (!fs.existsSync(logDirectory)) {
-  fs.mkdirSync(logDirectory);
-}
 
 const customLevels = {
   levels: {
@@ -59,8 +50,8 @@ const winstonLogger = createLogger({
         nestWinstonModuleUtilities.format.nestLike(),
       ),
     }),
-    new transports.File({ filename: path.join(logDirectory, 'error.log'), level: 'error' }),
-    new transports.File({ filename: path.join(logDirectory, 'combined.log') }),
+    new transports.File({ filename: 'logs/error.log', level: 'error' }),
+    new transports.File({ filename: 'logs/combined.log' }),
   ],
 });
 
