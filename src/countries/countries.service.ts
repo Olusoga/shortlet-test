@@ -77,4 +77,26 @@ export class CountriesService {
       );
     }
   }
+
+  async fetchRegions(): Promise<any> {
+    const countries = await this.fetchAllCountries({});
+    const regions = {};
+
+    countries.data.forEach((country) => {
+      const region = country.region || 'Unknown';
+      if (!regions[region]) {
+        regions[region] = { countries: [], totalPopulation: 0 };
+      }
+      const countryInfo = {
+        name: country.name.common,
+        population: country.population,
+        languages: country.languages,
+      };
+      regions[region].countries.push(countryInfo);
+      regions[region].totalPopulation += country.population;
+    });
+
+    return regions;
+  }
+
 }

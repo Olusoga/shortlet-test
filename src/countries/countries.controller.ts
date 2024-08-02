@@ -23,6 +23,21 @@ export class CountriesController {
     return countries;
   }
 
+  @Get('/regions')
+  async getRegions() {
+    const cacheKey = `regions`;
+    const cachedData = await this.redisService.get(cacheKey);
+
+    if (cachedData) {
+      return JSON.parse(cachedData);
+    }
+
+    const regions = await this.countriesService.fetchRegions();
+    console.log(regions)
+    await this.redisService.set(cacheKey, JSON.stringify(regions), 3600); 
+    return regions;
+  }
+
   @Get(':name')
   async getCountryByName(
     @Param('name') name: string,
@@ -38,4 +53,6 @@ export class CountriesController {
     await this.redisService.set(cacheKey, JSON.stringify(country), 3600);
     return country;
   }
+
+  
 }
