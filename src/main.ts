@@ -5,8 +5,17 @@ import helmet from 'helmet';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import * as fs from 'fs';
+import * as path from 'path';
+
 
 async function bootstrap() {
+
+  const logDir = path.join(__dirname, '..', 'logs');
+  
+  if (!fs.existsSync(logDir)) {
+    fs.mkdirSync(logDir, { recursive: true });
+  }
   const app = await NestFactory.create(AppModule);
 
   app.use(helmet());
