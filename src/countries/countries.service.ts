@@ -5,11 +5,11 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { AxiosInstance } from 'axios';
-import { AXIOS_INSTANCE_TOKEN } from 'src/common/axios/axios.provider';
+import { AXIOS_INSTANCE_TOKEN } from '../common/axios/axios.provider';
 import { CountryQueryDto } from './dto/country-query.dto';
 import { CountryDetailsDto } from './dto/country-details.dto';
-import { CustomLogger } from 'src/customLogger/custom_logger.service';
-import { RedisService } from 'src/redis/redis.service';
+import { CustomLogger } from '../customLogger/custom_logger.service';
+import { RedisService } from '../redis/redis.service';
 
 @Injectable()
 export class CountriesService {
@@ -85,7 +85,6 @@ export class CountriesService {
       data: paginatedCountries,
     };
       } catch (error) {
-      this.logger.error('Error fetching countries data', error.message);
       throw new HttpException(
       'Error fetching countries data',
       HttpStatus.INTERNAL_SERVER_ERROR,
@@ -117,10 +116,6 @@ export class CountriesService {
         borders: country.borders || [],
         };
       } catch (error) {
-        this.logger.error(
-          `Error fetching country details for ${name}`,
-          error.message,
-        );
         if (error.response && error.response.status === 404) {
           throw new HttpException('Country not found', HttpStatus.NOT_FOUND);
         }
@@ -209,7 +204,7 @@ export class CountriesService {
     });
   }
 
-  
+
   async fetchStatistics(): Promise<any> {
     const cacheKey = 'statistics';
 
@@ -241,7 +236,6 @@ export class CountriesService {
             : acc,
         { language: '', speakers: 0 },
       );
-
       this.logger.log('Fetched and processed statistics data');
       return {
         totalCountries,
