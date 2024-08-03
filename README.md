@@ -13,33 +13,48 @@ The API is designed to fetch data from the REST Countries API and expose it thro
 
 ## Project Structure
 
-- **src**
-  - **modules**
-    - **countries**
-      - `countries.controller.ts` - Handles HTTP requests related to countries.
-      - `countries.service.ts` - Contains business logic for processing country data.
-      - **dto**
-        - `country-query.dto.ts` - Data Transfer Object for country queries.
-        - `country-details.dto.ts` - Data Transfer Object for country details.
-    - **cache**
-      - `cache.service.ts` - Manages caching using Redis.
-    - **config**
-      - `config.module.ts` - Configuration settings.
-    - **common**
-      - `custom-logger.service.ts` - Custom logging service.
-    - `app.module.ts` - Main application module.
-  - `main.ts` - Entry point of the application.
-
-## Installation
-
-1. **Clone the Repository**
-
-   ```bash
-   git clone <your-gitlab-repo-url>
-   cd <project-directory>
-```
-```
-2. **Install dependecies**
-   ```bash
-   npm install
-```
+```plaintext
+src/
+├── common/
+|   ├──filters/
+|   |   └── http-exception.filter.ts
+│   ├── axios/
+│       ├── axios.provider.ts
+│       ├── axios.module.ts
+├── security/
+|      ├── middlewares
+|      |      └── cors-middleware.ts
+|      ├── rate-limiting
+|              └── rate-limiting.module.ts
+├── config/
+│   ├── config.module.ts
+|   ├──config.service.ts
+├── modules/
+│   ├── countries/
+│   │   ├── dto/
+│   │   │   ├── country-query.dto.ts
+│   │   │   ├── country-details.dto.ts
+│   │   ├── countries.controller.ts
+|   |   ├── countries.controller.spec.ts
+|   |   ├── countries.service.spec.ts
+│   │   ├── countries.service.ts
+│   │   ├── countries.module.ts
+│   ├── redis/
+│   │   ├── redis.service.ts
+│   │   ├── redis.module.ts
+│   ├── utils/
+│   │   ├── cache_utils.ts
+│   │   ├── cache_utils.module.ts
+|   |   ├── cach_module.ts
+|   |   ├── logging.ts
+│   └── customLogger/
+│       ├── custom_logger.service.ts
+│       ├── custom_logger.module.ts
+├── app.module.ts
+├── app.controller.spec.ts
+├── app.service.ts
+├── main.ts
+└── tests/
+    ├── app.e2e-spec.ts
+    └── jest.e2e.json
+        
