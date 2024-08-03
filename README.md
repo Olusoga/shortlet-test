@@ -57,4 +57,26 @@ src/
 └── tests/
     ├── app.e2e-spec.ts
     └── jest.e2e.json
-        
+```
+
+1. **Clone the Repository**
+
+   ```bash
+   git clone <your-gitlab-repo-url>
+   cd <project-directory>
+```
+
+```
+2. **Installation**
+   ```bash
+   npm install
+   ```
+  ```
+3. **Environment Configuration**
+   ```bash 
+   REDIS_HOST=your_redis_host
+   REDIS_PORT=your_redis_port
+   REDIS_PASSWORD=your_redis_password
+   ```
+## Running Application
+  
