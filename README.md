@@ -71,7 +71,6 @@ src/
    ```bash
    npm install
    ```
-  ```
 3. **Environment Configuration**
    REDIS_HOST=your_redis_host
    REDIS_PORT=your_redis_port
