@@ -61,8 +61,8 @@ src/
 
 1. **Clone the Repository**
    ```bash
-   git clone <your-gitlab-repo-url>
-   cd <project-directory>
+   git clone https://gitlab.com/shoga1/shortlet-test.git
+   cd shortlet-test
 ```
 ```
 2. **Installation**
