@@ -90,7 +90,7 @@ src/
    npm run start:prod
    ```
 ## Deployment
-The application is deployed on Render. You can find the live API here, https://gitlab.com/shoga1/shortlet-test.git.
+The application is deployed on Render. You can find the live API here, https://shortlet-test.onrender.com/.
 
 ## Documentation
 Comprehensive API documentation is available and generated using OpenAI's tools. You can access it here, https://shortlet-test.onrender.com/api#/.
