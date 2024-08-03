@@ -12,12 +12,15 @@ import { HttpModule, HttpService } from '@nestjs/axios';
 import { AxiosModule } from './common/axios/axios.module';
 import { RedisService } from './redis/redis.service';
 import { ConfigService } from '@nestjs/config';
+import { CachService } from './utils/cache_utils';
+import { UtilsCacheModule } from './utils/cach_utils.module';
 
 @Module({
   imports: [
     CacheModule.register({
       isGlobal: true,
     }),
+    UtilsCacheModule,
     CustomLoggerModule,
     AxiosModule,
     RateLimitingModule,
@@ -29,6 +32,7 @@ import { ConfigService } from '@nestjs/config';
   providers: [
     AppService,
     RedisService,
+    CachService,
     ConfigService,
     CountriesService,
     HttpService,

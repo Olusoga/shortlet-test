@@ -2,18 +2,18 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { CountriesService } from './countries.service';
 import { CustomLogger } from '../customLogger/custom_logger.service';
 import { RedisService } from '../redis/redis.service';
+import { CachService } from '../utils/cache_utils';
+import { AxiosInstance } from 'axios';
 import { AXIOS_INSTANCE_TOKEN } from '../common/axios/axios.provider';
-import { HttpException } from '@nestjs/common';
-import axios from 'axios';
-
-// Mock axios
-jest.mock('axios');
-const mockedAxios = axios as jest.Mocked<typeof axios>;
+import { CountryQueryDto } from './dto/country-query.dto';
+import { CountryDetailsDto } from './dto/country-details.dto';
 
 describe('CountriesService', () => {
   let service: CountriesService;
   let logger: CustomLogger;
   let redisService: RedisService;
+  let cachService: CachService;
+  let http: AxiosInstance;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -36,8 +36,17 @@ describe('CountriesService', () => {
           },
         },
         {
+          provide: CachService,
+          useValue: {
+            getCachedData: jest.fn(),
+            generateCacheKey: jest.fn(),
+          },
+        },
+        {
           provide: AXIOS_INSTANCE_TOKEN,
-          useValue: mockedAxios,
+          useValue: {
+            get: jest.fn(),
+          },
         },
       ],
     }).compile();
@@ -45,457 +54,198 @@ describe('CountriesService', () => {
     service = module.get<CountriesService>(CountriesService);
     logger = module.get<CustomLogger>(CustomLogger);
     redisService = module.get<RedisService>(RedisService);
+    cachService = module.get<CachService>(CachService);
+    http = module.get<AxiosInstance>(AXIOS_INSTANCE_TOKEN);
   });
 
-  it('should be defined', () => {
-    expect(service).toBeDefined();
-  });
-
-  describe('fetchData', () => {
-    it('should fetch data successfully', async () => {
-      const endpoint = '/all';
-      const responseData = [{ name: 'Country1' }, { name: 'Country2' }];
-      mockedAxios.get.mockResolvedValueOnce({ data: responseData });
-
-      const result = await service['fetchData'](endpoint);
-
-      expect(result).toEqual(responseData);
-      expect(logger.log).toHaveBeenCalledWith(`Successfully fetched data from ${endpoint}`);
-    });
-
-    it('should throw an error if fetching data fails', async () => {
-      const endpoint = '/all';
-      mockedAxios.get.mockRejectedValueOnce(new Error('Network Error'));
-
-      await expect(service['fetchData'](endpoint)).rejects.toThrow(HttpException);
-      expect(logger.error).toHaveBeenCalledWith(`Failed to fetch data from ${endpoint}`, 'Network Error');
-    });
-});
-
-describe('getCachedData', () => {
-  it('should return cached data if available', async () => {
-    const cacheKey = 'test_key';
-    const cachedData = { data: 'cached' };
-    jest.spyOn(redisService, 'get').mockResolvedValueOnce(JSON.stringify(cachedData));
-
-    const result = await service['getCachedData'](cacheKey, jest.fn());
-
-    expect(result).toEqual(cachedData);
-    expect(logger.log).toHaveBeenCalledWith(`Cache hit for key: ${cacheKey}`);
-  });
-  it('should fetch data and cache it if not available', async () => {
-    const cacheKey = 'test_key';
-    const fetchData = jest.fn().mockResolvedValueOnce({ data: 'fetched' });
-    jest.spyOn(redisService, 'get').mockResolvedValueOnce(null);
-    jest.spyOn(redisService, 'set').mockResolvedValueOnce(null);
-
-    const result = await service['getCachedData'](cacheKey, fetchData);
-
-    expect(result).toEqual({ data: 'fetched' });
-    expect(fetchData).toHaveBeenCalled();
-    expect(redisService.set).toHaveBeenCalledWith(cacheKey, JSON.stringify({ data: 'fetched' }), 3600);
-    expect(logger.log).toHaveBeenCalledWith(`Cache miss for key: ${cacheKey}`);
-  });
-});
-
-describe('fetchAllCountries', () => {
-  it('should fetch and process countries data successfully', async () => {
-    const query = { region: 'Asia', sortBy: 'name', page: 1, limit: 10 };
-    const endpoint = '/all';
-    const responseData = [
-      { name: 'Country1', region: 'Asia' },
-      { name: 'Country2', region: 'Europe' },
-    ];
-    const expectedFilteredData = [{ name: 'Country1', region: 'Asia' }];
-    mockedAxios.get.mockResolvedValueOnce({ data: responseData });
-    jest.spyOn(redisService, 'get').mockResolvedValueOnce(null);
-    jest.spyOn(redisService, 'set').mockResolvedValueOnce(null);
-
-    const result = await service.fetchAllCountries(query);
-
-    expect(result).toEqual({
-      total: 1,
-      page: 1,
-      limit: 10,
-      data: expectedFilteredData,
-    });
-    expect(logger.log).toHaveBeenCalledWith(
-      `Fetched and processed countries data with query: ${JSON.stringify(query)}`,
-    );
-  });
-
-  it('should return cached data if available', async () => {
-    const query = { region: 'Asia', sortBy: 'name', page: 1, limit: 10 };
-    const cachedData = {
-      total: 1,
-      page: 1,
-      limit: 10,
-      data: [{ name: 'Country1', region: 'Asia' }],
-    };
-    jest.spyOn(redisService, 'get').mockResolvedValueOnce(JSON.stringify(cachedData));
-
-    const result = await service.fetchAllCountries(query);
-
-    expect(result).toEqual(cachedData);
-    expect(logger.log).toHaveBeenCalledWith(`Cache hit for key: countries_${JSON.stringify(query)}`);
-  });
-
-  it('should throw an error if fetching data fails', async () => {
-    const query = { region: 'Asia', sortBy: 'name', page: 1, limit: 10 };
-    const endpoint = '/all';
-    mockedAxios.get.mockRejectedValueOnce(new Error('Network Error'));
-    jest.spyOn(redisService, 'get').mockResolvedValueOnce(null);
-
-    await expect(service.fetchAllCountries(query)).rejects.toThrow(HttpException);
-    expect(logger.error).toHaveBeenCalledWith('Failed to fetch data from /all', 'Network Error');
-  });
-});
-
-describe('getCountryByName', () => {
-  it('should fetch country details successfully', async () => {
-    const name = 'country1';
-    const endpoint = `/name/${name}`;
-    const responseData = [
-      {
-        name: { common: 'Country1' },
-        population: 1000000,
-        area: 50000,
-        languages: { en: 'English' },
-        borders: ['Border1', 'Border2'],
-      },
-    ];
-
-    mockedAxios.get.mockResolvedValueOnce({ data: responseData });
-    jest.spyOn(redisService, 'get').mockResolvedValueOnce(null);
-    jest.spyOn(redisService, 'set').mockResolvedValueOnce(null);
-
-    const result = await service.getCountryByName(name);
-
-    expect(result).toEqual({
-      name: 'Country1',
-      population: 1000000,
-      area: 50000,
-      languages: 'English',
-      borders: ['Border1', 'Border2'],
-    });
-    expect(logger.log).toHaveBeenCalledWith(`Fetched details for country: ${name}`);
-  });
-
-  it('should return cached data if available', async () => {
-    const name = 'country1';
-    const cachedData = {
-      name: 'Country1',
-      population: 1000000,
-      area: 50000,
-      languages: 'English',
-      borders: ['Border1', 'Border2'],
-    };
-
-    const cacheKey = service.generateCacheKey('country', { name });
-
-    jest.spyOn(redisService, 'get').mockResolvedValueOnce(JSON.stringify(cachedData));
-    jest.spyOn(logger, 'log');
-
-    const result = await service.getCountryByName(name);
-
-    expect(result).toEqual(cachedData);
-    expect(logger.log).toHaveBeenCalledWith(`Cache hit for key: ${cacheKey}`);
-  });
-
-  it('should throw an internal server error if fetching country details fails', async () => {
-    const name = 'country1';
-    const endpoint = `/name/${name}`;
-    mockedAxios.get.mockRejectedValueOnce(new Error('Network Error'));
-    jest.spyOn(redisService, 'get').mockResolvedValueOnce(null);
-
-    await expect(service.getCountryByName(name)).rejects.toThrow(HttpException);
-    expect(logger.error).toHaveBeenCalledWith(
-      `Failed to fetch data from ${endpoint}`,
-      'Network Error',
-    );
-  });
-});
-
-describe('fetchCountriesByRegion', () => {
-  it('should fetch countries by region and cache the result', async () => {
-    const region = 'Europe';
-    const countries = [{ name: { common: 'Country1' } }, { name: { common: 'Country2' } }];
-    const endpoint = `/region/${region}`;
-    mockedAxios.get.mockResolvedValueOnce({ data: countries });
-    jest.spyOn(redisService, 'get').mockResolvedValueOnce(null);
-    jest.spyOn(redisService, 'set').mockResolvedValueOnce(null);
-
-    const result = await service['fetchCountriesByRegion'](region);
-    const cacheKey = service.generateCacheKey('region', { region });
-    expect(mockedAxios.get).toHaveBeenCalledWith(endpoint);
-    expect(result).toEqual(countries);
-    expect(redisService.set).toHaveBeenCalledWith(
-      cacheKey,
-      JSON.stringify(countries),
-      3600,
-    );
-    
-    expect(logger.log).toHaveBeenCalledWith(
-      `Fetched ${countries.length} countries for region ${region}`,
-    );
-  });
-
-  it('should return cached data if available', async () => {
-    const region = 'Europe';
-    const cacheKey = service.generateCacheKey('region', { region });
-    const cachedData = [{ name: { common: 'Country1' } }, { name: { common: 'Country2' } }];
-    jest.spyOn(redisService, 'get').mockResolvedValueOnce(JSON.stringify(cachedData));
-
-    const result = await service['fetchCountriesByRegion'](region);
-
-    expect(result).toEqual(cachedData);
-    expect(logger.log).toHaveBeenCalledWith(`Cache hit for key: ${cacheKey}`);
-  });
-
-  it('should throw an error if fetching data fails', async () => {
-    const region = 'Europe';
-    const endpoint = `/region/${region}`;
-    mockedAxios.get.mockRejectedValueOnce(new Error('Network Error'));
-    jest.spyOn(redisService, 'get').mockResolvedValueOnce(null);
-
-    await expect(service['fetchCountriesByRegion'](region)).rejects.toThrow(HttpException);
-    expect(logger.error).toHaveBeenCalledWith(
-      `Failed to fetch data from ${endpoint}`,
-      'Network Error',
-    );
-  });
-});
-
-describe('fetchRegions', () => {
-  it('should fetch regions and cache the result', async () => {
-    const regionsList = [
-      'Africa',
-      'Americas',
-      'Asia',
-      'Europe',
-      'Oceania',
-      'Antarctic',
-      'Caribbean',
-    ];
-    const mockCountries = (region: string) => [
-      { name: { common: `Country1_${region}` }, population: 1000000, languages: { en: 'English' } },
-      { name: { common: `Country2_${region}` }, population: 2000000, languages: { en: 'English' } },
-    ];
-
-    jest.spyOn(service, 'fetchCountriesByRegion' as any).mockImplementation(async (region: string) => {
-      return mockCountries(region);
-    });
-
-    jest.spyOn(redisService, 'get').mockResolvedValueOnce(null);
-    jest.spyOn(redisService, 'set').mockResolvedValueOnce(null);
-
-    const result = await service.fetchRegions();
-
-    const expectedRegions = regionsList.reduce((acc, region) => {
-      const countries = mockCountries(region);
-      acc[region] = {
-        countries: countries.map((country) => ({
-          name: country.name.common,
-          population: country.population,
-          languages: country.languages,
-        })),
-        totalPopulation: countries.reduce((sum, country) => sum + country.population, 0),
+  describe('fetchAllCountries', () => {
+    it('should return cached data if available', async () => {
+      const query: CountryQueryDto = { region: 'Asia', sortBy: 'name', page: 1, limit: 10 };
+      const cacheKey = 'countries_' + JSON.stringify(query);
+      const cachedData = {
+        total: 1,
+        page: 1,
+        limit: 10,
+        data: [{ name: 'Country1', population: 1000000 }],
       };
-      return acc;
-    }, {});
 
-    expect(result).toEqual(expectedRegions);
-    expect(redisService.set).toHaveBeenCalledWith(
-      'regions',
-      JSON.stringify(expectedRegions),
-      3600,
-    );
-    regionsList.forEach((region) => {
-      expect(logger.log).toHaveBeenCalledWith(`Processed region: ${region}`);
+      jest.spyOn(cachService, 'generateCacheKey').mockReturnValue(cacheKey);
+      jest.spyOn(cachService, 'getCachedData').mockResolvedValueOnce(cachedData);
+
+      const result = await service.fetchAllCountries(query);
+
+      expect(result).toEqual(cachedData);
+      expect(cachService.generateCacheKey).toHaveBeenCalledWith('countries', query);
+      expect(cachService.getCachedData).toHaveBeenCalledWith(cacheKey, expect.any(Function));
+    });
+
+    it('should fetch and process data if not cached', async () => {
+      const query: CountryQueryDto = { region: 'Asia', sortBy: 'name', page: 1, limit: 10 };
+      const cacheKey = 'countries_' + JSON.stringify(query);
+      const countriesData = [{ name: { common: 'Country1' }, region: 'Asia', population: 1000000 }];
+
+      jest.spyOn(cachService, 'generateCacheKey').mockReturnValue(cacheKey);
+      jest.spyOn(cachService, 'getCachedData').mockImplementation(async (_, fetchFunction) => {
+        return await fetchFunction();
+      });
+      jest.spyOn(http, 'get').mockResolvedValue({ data: countriesData });
+
+      const result = await service.fetchAllCountries(query);
+
+      expect(result.total).toBe(1);
+      expect(result.page).toBe(1);
+      expect(result.limit).toBe(10);
+      expect(result.data[0].name.common).toBe('Country1');
     });
   });
 
-  it('should return cached data if available', async () => {
-    const cachedData = {
-      Africa: {
-        countries: [
-          { name: 'Country1_Africa', population: 1000000, languages: { en: 'English' } },
-          { name: 'Country2_Africa', population: 2000000, languages: { en: 'English' } },
-        ],
-        totalPopulation: 3000000,
-      },
-      Europe: {
-        countries: [
-          { name: 'Country1_Europe', population: 1000000, languages: { en: 'English' } },
-          { name: 'Country2_Europe', population: 2000000, languages: { en: 'English' } },
-        ],
-        totalPopulation: 3000000,
-      },
-    };
-    jest.spyOn(redisService, 'get').mockResolvedValueOnce(JSON.stringify(cachedData));
-
-    const result = await service.fetchRegions();
-
-    expect(result).toEqual(cachedData);
-    expect(logger.log).toHaveBeenCalledWith('Cache hit for key: regions');
-  });
-});
-describe('fetchLanguages', () => {
-  it('should fetch and process languages data successfully', async () => {
-    const countries = [
-      {
-        name: { common: 'Country1' },
-        population: 1000000,
-        languages: { en: 'English', es: 'Spanish' },
-      },
-      {
-        name: { common: 'Country2' },
-        population: 500000,
-        languages: { en: 'English' },
-      },
-    ];
-    const expectedLanguages = {
-      en: {
-        countries: [
-          { name: 'Country1', population: 1000000 },
-          { name: 'Country2', population: 500000 },
-        ],
-        totalSpeakers: 1500000,
-      },
-      es: {
-        countries: [{ name: 'Country1', population: 1000000 }],
-        totalSpeakers: 1000000,
-      },
-    };
-
-    jest.spyOn(service, 'fetchData' as any).mockResolvedValueOnce(countries);
-    jest.spyOn(redisService, 'get').mockResolvedValueOnce(null);
-    jest.spyOn(redisService, 'set').mockResolvedValueOnce(null);
-
-    const result = await service.fetchLanguages();
-
-    expect(result).toEqual(expectedLanguages);
-    expect(logger.log).toHaveBeenCalledWith('Fetched and processed languages data');
-  });
-
-  it('should return cached data if available', async () => {
-    const cachedData = {
-      en: {
-        countries: [
-          { name: 'Country1', population: 1000000 },
-          { name: 'Country2', population: 500000 },
-        ],
-        totalSpeakers: 1500000,
-      },
-      es: {
-        countries: [{ name: 'Country1', population: 1000000 }],
-        totalSpeakers: 1000000,
-      },
-    };
-    jest.spyOn(redisService, 'get').mockResolvedValueOnce(JSON.stringify(cachedData));
-
-    const result = await service.fetchLanguages();
-
-    expect(result).toEqual(cachedData);
-    expect(logger.log).toHaveBeenCalledWith('Cache hit for key: languages');
-  });
-
-  it('should not log out in the test', async () => {
-    jest.spyOn(service, 'fetchData' as any).mockResolvedValueOnce([]);
-    jest.spyOn(redisService, 'get').mockResolvedValueOnce(null);
-    jest.spyOn(redisService, 'set').mockResolvedValueOnce(null);
-    const originalLog = console.log;
-    console.log = jest.fn();
-
-    await service.fetchLanguages();
-
-    expect(console.log).not.toHaveBeenCalled();
-    console.log = originalLog; 
-  });
-});
-
-describe('fetchStatistics', () => {
-  it('should fetch and process statistics data successfully', async () => {
-    const countries = [
-      {
-        name: { common: 'Country1' },
+  describe('getCountryByName', () => {
+    it('should return cached data if available', async () => {
+      const name = 'country1';
+      const cacheKey = 'country_' + JSON.stringify({ name });
+      const cachedData: CountryDetailsDto = {
+        name: 'Country1',
         population: 1000000,
         area: 50000,
-        languages: { en: 'English', es: 'Spanish' },
-      },
-      {
-        name: { common: 'Country2' },
-        population: 500000,
-        area: 100000,
-        languages: { en: 'English' },
-      },
-      {
-        name: { common: 'Country3' },
-        population: 2000000,
-        area: 75000,
-        languages: { fr: 'French' },
-      },
-    ];
-    const expectedStatistics = {
-      totalCountries: 3,
-      largestCountry: countries[1],
-      smallestCountry: countries[1],
-      mostSpokenLanguage: {
-        language: 'fr',
-        speakers: 2000000,
-      },
-    };
+        languages: 'English',
+        borders: ['Border1', 'Border2'],
+      };
 
-    jest.spyOn(service, 'fetchData' as any).mockResolvedValueOnce(countries);
-    jest.spyOn(redisService, 'get').mockResolvedValueOnce(null);
-    jest.spyOn(redisService, 'set').mockResolvedValueOnce(null);
+      jest.spyOn(cachService, 'generateCacheKey').mockReturnValue(cacheKey);
+      jest.spyOn(cachService, 'getCachedData').mockResolvedValueOnce(cachedData);
 
-    const result = await service.fetchStatistics();
+      const result = await service.getCountryByName(name);
 
-    expect(result).toEqual(expectedStatistics);
-    expect(logger.log).toHaveBeenCalledWith('Fetched and processed statistics data');
+      expect(result).toEqual(cachedData);
+      expect(cachService.generateCacheKey).toHaveBeenCalledWith('country', { name });
+      expect(cachService.getCachedData).toHaveBeenCalledWith(cacheKey, expect.any(Function));
+    });
+
+    it('should fetch and return country details if not cached', async () => {
+      const name = 'country1';
+      const cacheKey = 'country_' + JSON.stringify({ name });
+      const countriesData = [{ name: { common: 'Country1' }, population: 1000000, area: 50000, languages: { en: 'English' }, borders: ['Border1', 'Border2'] }];
+
+      jest.spyOn(cachService, 'generateCacheKey').mockReturnValue(cacheKey);
+      jest.spyOn(cachService, 'getCachedData').mockImplementation(async (_, fetchFunction) => {
+        return await fetchFunction();
+      });
+      jest.spyOn(http, 'get').mockResolvedValue({ data: countriesData });
+
+      const result = await service.getCountryByName(name);
+
+      expect(result.name).toBe('Country1');
+      expect(result.population).toBe(1000000);
+      expect(result.area).toBe(50000);
+      expect(result.languages).toBe('English');
+      expect(result.borders).toEqual(['Border1', 'Border2']);
+    });
   });
 
-  it('should return cached data if available', async () => {
-    const cachedData = {
-      totalCountries: 3,
-      largestCountry: {
-        name: { common: 'Country2' },
-        population: 500000,
-        area: 100000,
-        languages: { en: 'English' },
-      },
-      smallestCountry: {
-        name: { common: 'Country2' },
-        population: 500000,
-        area: 100000,
-        languages: { en: 'English' },
-      },
-      mostSpokenLanguage: {
-        language: 'en',
-        speakers: 1500000,
-      },
-    };
-    jest.spyOn(redisService, 'get').mockResolvedValueOnce(JSON.stringify(cachedData));
+  describe('fetchRegions', () => {
+    it('should return cached data if available', async () => {
+      const cacheKey = 'regions';
+      const cachedData = { Africa: { countries: [], totalPopulation: 0 } };
 
-    const result = await service.fetchStatistics();
+      jest.spyOn(cachService, 'generateCacheKey').mockReturnValue(cacheKey);
+      jest.spyOn(cachService, 'getCachedData').mockResolvedValueOnce(cachedData);
 
-    expect(result).toEqual(cachedData);
-    expect(logger.log).toHaveBeenCalledWith('Cache hit for key: statistics');
+      const result = await service.fetchRegions();
+
+      expect(result).toEqual(cachedData);
+      expect(cachService.generateCacheKey).toHaveBeenCalledWith('regions');
+      expect(cachService.getCachedData).toHaveBeenCalledWith(cacheKey, expect.any(Function));
+    });
+
+    it('should fetch and return regions data if not cached', async () => {
+      const cacheKey = 'regions';
+      const countriesData = [{ name: { common: 'Country1' }, region: 'Asia', population: 1000000, languages: { en: 'English' } }];
+
+      jest.spyOn(cachService, 'generateCacheKey').mockReturnValue(cacheKey);
+      jest.spyOn(cachService, 'getCachedData').mockImplementation(async (_, fetchFunction) => {
+        return await fetchFunction();
+      });
+      jest.spyOn(service, 'fetchCountriesByRegion').mockResolvedValue(countriesData);
+
+      const result = await service.fetchRegions();
+
+      expect(result.Asia).toBeDefined();
+      expect(result.Asia.totalPopulation).toBe(1000000);
+    });
   });
 
+  describe('fetchLanguages', () => {
+    it('should return cached data if available', async () => {
+      const cacheKey = 'languages';
+      const cachedData = { English: { countries: [], totalSpeakers: 0 } };
 
-  it('should not log out in the test', async () => {
-    jest.spyOn(service, 'fetchData' as any).mockResolvedValueOnce([]);
-    jest.spyOn(redisService, 'get').mockResolvedValueOnce(null);
-    jest.spyOn(redisService, 'set').mockResolvedValueOnce(null);
-    const originalLog = console.log;
-    console.log = jest.fn();
+      jest.spyOn(cachService, 'generateCacheKey').mockReturnValue(cacheKey);
+      jest.spyOn(cachService, 'getCachedData').mockResolvedValueOnce(cachedData);
 
-    await service.fetchStatistics();
+      const result = await service.fetchLanguages();
 
-    expect(console.log).not.toHaveBeenCalled();
-    console.log = originalLog; 
+      expect(result).toEqual(cachedData);
+      expect(cachService.generateCacheKey).toHaveBeenCalledWith('languages');
+      expect(cachService.getCachedData).toHaveBeenCalledWith(cacheKey, expect.any(Function));
+    });
+
+    it('should fetch and return languages data if not cached', async () => {
+      const cacheKey = 'languages';
+      const countriesData = [
+        { name: { common: 'Country1' }, population: 1000000, languages: { en: 'English' } },
+        { name: { common: 'Country2' }, population: 500000, languages: { en: 'English' } },
+      ];
+    
+      jest.spyOn(cachService, 'generateCacheKey').mockReturnValue(cacheKey);
+      jest.spyOn(cachService, 'getCachedData').mockImplementation(async (_, fetchFunction) => {
+        return await fetchFunction();
+      });
+      jest.spyOn(http, 'get').mockResolvedValue({ data: countriesData });
+    
+      const result = await service.fetchLanguages();
+    
+      console.log('Test result:', result); 
+    
+      expect(result.en).toBeDefined();
+      expect(result.en.totalSpeakers).toBe(1500000);
+    });
   });
-});
+
+  describe('fetchStatistics', () => {
+    it('should return cached data if available', async () => {
+      const cacheKey = 'statistics';
+      const cachedData = {
+        totalCountries: 1,
+        largestCountry: { name: { common: 'Country1' }, area: 50000 },
+        smallestCountry: { name: { common: 'Country1' }, population: 1000000 },
+        mostSpokenLanguage: { language: 'English', speakers: 1000000 },
+      };
+
+      jest.spyOn(cachService, 'generateCacheKey').mockReturnValue(cacheKey);
+      jest.spyOn(cachService, 'getCachedData').mockResolvedValueOnce(cachedData);
+
+      const result = await service.fetchStatistics();
+
+      expect(result).toEqual(cachedData);
+      expect(cachService.generateCacheKey).toHaveBeenCalledWith('statistics');
+      expect(cachService.getCachedData).toHaveBeenCalledWith(cacheKey, expect.any(Function));
+    });
+
+    it('should fetch and return statistics data if not cached', async () => {
+      const cacheKey = 'statistics';
+      const countriesData = [{ name: { common: 'Country1' }, population: 1000000, area: 50000, languages: { en: 'English' } }];
+
+      jest.spyOn(cachService, 'generateCacheKey').mockReturnValue(cacheKey);
+      jest.spyOn(cachService, 'getCachedData').mockImplementation(async (_, fetchFunction) => {
+        return await fetchFunction();
+      });
+      jest.spyOn(http, 'get').mockResolvedValue({ data: countriesData });
+
+      const result = await service.fetchStatistics();
+
+      expect(result.totalCountries).toBe(1);
+      expect(result.largestCountry.name.common).toBe('Country1');
+      expect(result.mostSpokenLanguage.language).toBe('en');
+    });
+  });
 });

@@ -6,10 +6,13 @@ import { AxiosModule } from '../common/axios/axios.module';
 import { RedisService } from 'src/redis/redis.service';
 import { CustomLoggerModule } from 'src/customLogger/custom_logger.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { CachService } from '../utils/cache_utils';
+import { UtilsCacheModule } from 'src/utils/cach_utils.module';
+
 
 @Module({
-  imports: [AxiosModule, CustomLoggerModule, ConfigModule],
-  providers: [CountriesService, ConfigService, HttpService, RedisService],
+  imports: [AxiosModule,UtilsCacheModule, CustomLoggerModule, ConfigModule],
+  providers: [CountriesService,CachService, ConfigService, HttpService, RedisService],
   controllers: [CountriesController],
 })
 export class CountriesModule {}
