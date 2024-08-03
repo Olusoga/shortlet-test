@@ -72,9 +72,9 @@ src/
    npm install
    ```
 3. **Environment Configuration**
-   `REDIS_HOST=your_redis_host`
-   `REDIS_PORT=your_redis_port`
-   `REDIS_PASSWORD=your_redis_password`
+  - `REDIS_HOST=your_redis_host`
+  - `REDIS_PORT=your_redis_port`
+  - `REDIS_PASSWORD=your_redis_password`
    
 ## Running Application
   
