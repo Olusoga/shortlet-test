@@ -60,12 +60,10 @@ src/
 ```
 
 1. **Clone the Repository**
-
    ```bash
    git clone <your-gitlab-repo-url>
    cd <project-directory>
 ```
-
 ```
 2. **Installation**
    ```bash
@@ -82,9 +80,13 @@ src/
 ```bash
    npm run start:dev
 ```
-
 2. **Build Application**
  ```bash
    npm run build
    ```
+3. **Run the Production Server**
+```bash
+   npm run start:prod
+   ```
+
 
