@@ -2,18 +2,18 @@ import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { CacheModule } from '@nestjs/cache-manager';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { LoggerMiddleware } from './utils/logging';
-import { CustomLoggerModule } from './customLogger/custom_logger.module';
+import { LoggerMiddleware } from './modules/utils/logging';
+import { CustomLoggerModule } from './modules/customLogger/custom_logger.module';
 import { RateLimitingModule } from './security/rate-limiting/rate-limiting.module';
 import { ConfigModule } from './config/config.module';
-import { CountriesService } from './countries/countries.service';
-import { CountriesModule } from './countries/countries.module';
+import { CountriesService } from './modules/countries/countries.service';
+import { CountriesModule } from './modules/countries/countries.module';
 import { HttpModule, HttpService } from '@nestjs/axios';
 import { AxiosModule } from './common/axios/axios.module';
-import { RedisService } from './redis/redis.service';
+import { RedisService } from './modules/redis/redis.service';
 import { ConfigService } from '@nestjs/config';
-import { CachService } from './utils/cache_utils';
-import { UtilsCacheModule } from './utils/cach_utils.module';
+import { CachService } from './modules/utils/cache_utils';
+import { UtilsCacheModule } from './modules/utils/cach_utils.module';
 
 @Module({
   imports: [

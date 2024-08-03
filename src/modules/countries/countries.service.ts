@@ -5,7 +5,7 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { AxiosInstance } from 'axios';
-import { AXIOS_INSTANCE_TOKEN } from '../common/axios/axios.provider';
+import { AXIOS_INSTANCE_TOKEN } from '../../common/axios/axios.provider';
 import { CountryQueryDto } from './dto/country-query.dto';
 import { CountryDetailsDto } from './dto/country-details.dto';
 import { CustomLogger } from '../customLogger/custom_logger.service';
