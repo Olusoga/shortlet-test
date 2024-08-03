@@ -190,12 +190,16 @@ describe('getCountryByName', () => {
       languages: 'English',
       borders: ['Border1', 'Border2'],
     };
+
+    const cacheKey = service.generateCacheKey('country', { name });
+
     jest.spyOn(redisService, 'get').mockResolvedValueOnce(JSON.stringify(cachedData));
+    jest.spyOn(logger, 'log');
 
     const result = await service.getCountryByName(name);
 
     expect(result).toEqual(cachedData);
-    expect(logger.log).toHaveBeenCalledWith(`Cache hit for key: country_${name}`);
+    expect(logger.log).toHaveBeenCalledWith(`Cache hit for key: ${cacheKey}`);
   });
 
   it('should throw an internal server error if fetching country details fails', async () => {
@@ -222,14 +226,15 @@ describe('fetchCountriesByRegion', () => {
     jest.spyOn(redisService, 'set').mockResolvedValueOnce(null);
 
     const result = await service['fetchCountriesByRegion'](region);
-
+    const cacheKey = service.generateCacheKey('region', { region });
     expect(mockedAxios.get).toHaveBeenCalledWith(endpoint);
     expect(result).toEqual(countries);
     expect(redisService.set).toHaveBeenCalledWith(
-      `region_${region}`,
+      cacheKey,
       JSON.stringify(countries),
       3600,
     );
+    
     expect(logger.log).toHaveBeenCalledWith(
       `Fetched ${countries.length} countries for region ${region}`,
     );
@@ -237,7 +242,7 @@ describe('fetchCountriesByRegion', () => {
 
   it('should return cached data if available', async () => {
     const region = 'Europe';
-    const cacheKey = `region_${region}`;
+    const cacheKey = service.generateCacheKey('region', { region });
     const cachedData = [{ name: { common: 'Country1' } }, { name: { common: 'Country2' } }];
     jest.spyOn(redisService, 'get').mockResolvedValueOnce(JSON.stringify(cachedData));
 
