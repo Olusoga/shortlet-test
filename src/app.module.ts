@@ -14,9 +14,10 @@ import { RedisService } from './modules/redis/redis.service';
 import { ConfigService } from '@nestjs/config';
 import { CachService } from './modules/utils/cache_utils';
 import { UtilsCacheModule } from './modules/utils/cach_utils.module';
+import { PrometheusModule } from '@willsoto/nestjs-prometheus';
 
 @Module({
-  imports: [
+  imports: [PrometheusModule.register(),
     CacheModule.register({
       isGlobal: true,
     }),
