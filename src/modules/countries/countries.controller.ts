@@ -12,7 +12,7 @@ import {
 } from '@nestjs/swagger';
 
 @ApiTags('countries')
-@Controller('api/countries')
+@Controller('api/v1/countries')
 export class CountriesController {
   constructor(
     private readonly logger: CustomLogger,
