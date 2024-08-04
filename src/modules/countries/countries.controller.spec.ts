@@ -1,9 +1,9 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { CountriesController } from './countries.controller';
-import { CountriesService } from './countries.service';
-import { CustomLogger } from '../customLogger/custom_logger.service';
-import { RedisService } from '../redis/redis.service';
-import { CountryDetailsDto } from './dto/country-details.dto';
+import { TestingModule, Test } from "@nestjs/testing";
+import { CountriesController } from "../../modules/countries/countries.controller";
+import { CountriesService } from "../../modules/countries/countries.service";
+import { CountryDetailsDto } from "../../modules/countries/dto/country-details.dto";
+import { CustomLogger } from "../../modules/customLogger/custom_logger.service";
+import { RedisService } from "../../modules/redis/redis.service";
 
 describe('CountriesController', () => {
   let controller: CountriesController;

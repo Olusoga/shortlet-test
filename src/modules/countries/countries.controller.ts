@@ -1,7 +1,6 @@
 import { Controller, Get, Param, Query } from '@nestjs/common';
 import { CountriesService } from './countries.service';
 import { CountryDetailsDto } from './dto/country-details.dto';
-import { RedisService } from '../redis/redis.service';
 import { CustomLogger } from '../customLogger/custom_logger.service';
 import {
   ApiOperation,
@@ -17,7 +16,6 @@ export class CountriesController {
   constructor(
     private readonly logger: CustomLogger,
     private readonly countriesService: CountriesService,
-    private readonly redisService: RedisService,
   ) {}
 
   @ApiOperation({ summary: 'Get a list of countries' })

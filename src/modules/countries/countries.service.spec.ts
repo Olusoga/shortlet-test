@@ -1,12 +1,13 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { CountriesService } from './countries.service';
-import { CustomLogger } from '../customLogger/custom_logger.service';
-import { RedisService } from '../redis/redis.service';
-import { CachService } from '../utils/cache_utils';
 import { AxiosInstance } from 'axios';
 import { AXIOS_INSTANCE_TOKEN } from '../../common/axios/axios.provider';
-import { CountryQueryDto } from './dto/country-query.dto';
-import { CountryDetailsDto } from './dto/country-details.dto';
+import { CountriesService } from '../../modules/countries/countries.service';
+import { CountryDetailsDto } from '../../modules/countries/dto/country-details.dto';
+import { CountryQueryDto } from '../../modules/countries/dto/country-query.dto';
+import { CustomLogger } from '../../modules/customLogger/custom_logger.service';
+import { RedisService } from '../../modules/redis/redis.service';
+import { CachService } from '../../modules/utils/cache_utils';
+
 
 describe('CountriesService', () => {
   let service: CountriesService;
@@ -202,10 +203,7 @@ describe('CountriesService', () => {
       });
       jest.spyOn(http, 'get').mockResolvedValue({ data: countriesData });
     
-      const result = await service.fetchLanguages();
-    
-      console.log('Test result:', result); 
-    
+      const result = await service.fetchLanguages(); 
       expect(result.en).toBeDefined();
       expect(result.en.totalSpeakers).toBe(1500000);
     });
