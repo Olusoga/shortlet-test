@@ -76,7 +76,7 @@ src/
 
 1. **Clone the Repository**
    ```bash
-   git clone https://gitlab.com/shoga1/shortlet-test.git
+   git clone https://github.com/Olusoga/shortlet-test
    cd shortlet-test
 ```
 ```
