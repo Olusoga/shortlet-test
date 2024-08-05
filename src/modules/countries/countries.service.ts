@@ -9,14 +9,12 @@ import { AXIOS_INSTANCE_TOKEN } from '../../common/axios/axios.provider';
 import { CountryQueryDto } from './dto/country-query.dto';
 import { CountryDetailsDto } from './dto/country-details.dto';
 import { CustomLogger } from '../customLogger/custom_logger.service';
-import { RedisService } from '../redis/redis.service';
 import { CachService } from '../utils/cache_utils';
 
 @Injectable()
 export class CountriesService {
   constructor(
     private readonly logger: CustomLogger,
-    private readonly redisService: RedisService,
     private readonly cachService: CachService,
     @Inject(AXIOS_INSTANCE_TOKEN) private readonly http: AxiosInstance,
   ) {}

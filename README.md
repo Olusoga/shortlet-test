@@ -4,12 +4,27 @@ This project implements a REST API using NestJS and TypeScript that integrates d
 
 ## Project Overview
 
-The API is designed to fetch data from the REST Countries API and expose it through several endpoints with enhanced functionalities like pagination, filtering, sorting, and caching. Key features include:
+The API is designed to fetch data from the REST Countries API and expose it through several endpoints with enhanced functionalities like pagination, filtering, sorting, and caching. 
 
-- **Caching**: Using Redis to cache API responses for improved performance.
-- **Testing**: Comprehensive unit tests for services and integration tests for controllers.
-- **Documentation**: Generated API documentation using OpenAI's tools.
-- **Deployment**: Hosted on Render and source code managed via GitLab.
+## Technical Specifications
+## Frameworks and Libraries
+- NestJS: A progressive Node.js framework for building efficient and scalable server-side applications.
+- TypeScript: A strict syntactical superset of JavaScript that adds optional static typing.
+- Redis: An in-memory data structure store, used as a database, cache, and message broker.
+- Winston: A logger for Node.js applications.
+- Prometheus: An open-source system monitoring and alerting toolkit.
+- Grafana: An open-source platform for monitoring and observability, used to visualize Prometheus metrics.
+- Docker: A platform for developing, shipping, and running applications in containers.
+
+## Key Features
+- Caching: Implemented using Redis to cache API responses for faster data retrieval and reduced load on the REST Countries API.
+- Rate Limiting: Middleware to prevent abuse by limiting the number of requests a client can make.
+- CORS Middleware: Ensuring secure cross-origin requests.
+- Exception Handling: Centralized HTTP exception filter for consistent error responses.
+- Custom Logger: Using Winston for detailed logging and tracking.
+- Metrics: Monitoring API performance and usage using Prometheus and Grafana.
+- Unit and Integration Tests: Ensuring code quality and reliability.
+- Containerization: Using Docker to containerize the application for consistent and portable environments.
 
 ## Project Structure
 
@@ -89,32 +104,30 @@ src/
 ```bash
    npm run start:prod
    ```
-## Deployment
-The application is deployed on Render. You can find the live API here, https://shortlet-test.onrender.com/.
-
-## Documentation
-Comprehensive API documentation is available and generated using OpenAI's tools. You can access it here, https://shortlet-test.onrender.com/api#/.
+## Running with Docker
+1. **Build Docker Image**
+```bash
+  docker build -t shortlet-test .
+```
+2. **Run Docker Container**
+```bash
+  docker run -p 3000:3000 shortlet-test
+```
 
 ## Testing
 To run tests, use the following commands:
 ```bash
   npm test
 ```
-## Technical Specifications
-## Frameworks and Libraries
-- NestJS: A progressive Node.js framework for building efficient and scalable    server-side applications.
-- TypeScript: A strict syntactical superset of JavaScript that adds optional static typing.
-- Redis: An in-memory data structure store, used as a database, cache, and message broker.
-- Winston: A logger for Node.js applications.
+## Deployment
+The application is deployed on Render. You can find the live API here, https://shortlet-test.onrender.com/.
 
-## Key Features
-- Caching: Implemented using Redis to cache API responses for faster data retrieval and reduced load on the REST Countries API.
-- Rate Limiting: Middleware to prevent abuse by limiting the number of requests a  client can make.
-- CORS Middleware: Ensuring secure cross-origin requests.
-- Exception Handling: Centralized HTTP exception filter for consistent error responses.
-- Custom Logger: Using Winston for detailed logging and tracking.
-- Metrics: Monitoring API performance and usage using Prometheus and Grafana.
-- Unit and Integration Tests: Ensuring code quality and reliability.
+## Documentation
+Comprehensive API documentation is available and generated using OpenAI's tools. You can access it here, https://shortlet-test.onrender.com/api#/.
+
+## Postman Documentation
+Example API usage and endpoints are documented in Postman. You can access the Postman documentation here: Postman Documentation.
+
 
 ## Contributing
 Feel free to submit issues or pull requests. For major changes, please open an issue first to discuss what you would like to change.
