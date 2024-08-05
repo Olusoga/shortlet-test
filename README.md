@@ -79,10 +79,12 @@ src/
    git clone https://github.com/Olusoga/shortlet-test
    cd shortlet-test
 ```
+```
 2. **Installation**
    ```bash
    npm install
    ```
+   
 3. **Environment Configuration**
   - `REDIS_HOST=your_redis_host`
   - `REDIS_PORT=your_redis_port`
