@@ -33,7 +33,9 @@ src/
 ├── common/
 |   ├──filters/
 |   |   └── http-exception.filter.ts
-│   ├── axios/
+│   ├──error
+|   |   └──custom-exception-error.ts
+|   ├── axios/
 │       ├── axios.provider.ts
 │       ├── axios.module.ts
 ├── security/
