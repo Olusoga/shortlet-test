@@ -4,12 +4,13 @@ import {
   Inject,
   Injectable,
 } from '@nestjs/common';
-import { AxiosInstance } from 'axios';
+import axios, { AxiosError, AxiosInstance } from 'axios';
 import { AXIOS_INSTANCE_TOKEN } from '../../common/axios/axios.provider';
 import { CountryQueryDto } from './dto/country-query.dto';
 import { CountryDetailsDto } from './dto/country-details.dto';
 import { CustomLogger } from '../customLogger/custom_logger.service';
 import { CachService } from '../utils/cache_utils';
+import { CustomHttpException } from '../../common/error/custom-exception-error';
 
 @Injectable()
 export class CountriesService {
@@ -26,7 +27,17 @@ export class CountriesService {
       return response.data;
     } catch (error) {
       this.logger.error(`Failed to fetch data from ${endpoint}`, error.message);
-      throw new HttpException('Failed to fetch data', HttpStatus.BAD_REQUEST);
+  
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError;
+  
+        if (axiosError.response) {
+          this.logger.error(`API response error: ${axiosError.response.status}`,` ${axiosError.response.statusText}`);
+          throw new CustomHttpException(axiosError.response.data as unknown as any|| 'Error fetching data', axiosError.response.status);
+        }
+      }
+  
+      throw new CustomHttpException('Failed to fetch data', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -68,7 +79,7 @@ export class CountriesService {
           data: paginatedCountries,
         };
       } catch (error) {
-        throw new HttpException(
+        throw new CustomHttpException(
           'Error fetching countries data',
           HttpStatus.INTERNAL_SERVER_ERROR,
         );
@@ -99,9 +110,9 @@ export class CountriesService {
         };
       } catch (error) {
         if (error.response && error.response.status === 404) {
-          throw new HttpException('Country not found', HttpStatus.NOT_FOUND);
+          throw new CustomHttpException('Country not found', HttpStatus.NOT_FOUND);
         }
-        throw new HttpException(
+        throw new CustomHttpException(
           'Error fetching country details',
           HttpStatus.INTERNAL_SERVER_ERROR,
         );
