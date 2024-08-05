@@ -126,7 +126,7 @@ The application is deployed on Render. You can find the live API here, https://s
 Comprehensive API documentation is available and generated using OpenAI's tools. You can access it here, https://shortlet-test.onrender.com/api#/.
 
 ## Postman Documentation
-Example API usage and endpoints are documented in Postman. You can access the Postman documentation here: Postman Documentation.
+Example API usage and endpoints are documented in Postman. You can access the Postman documentation here: https://documenter.getpostman.com/view/19781070/2sA3rwNuMM.
 
 
 ## Contributing
