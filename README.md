@@ -116,7 +116,6 @@ src/
 ```bash
   docker run -p 3000:3000 shortlet-test
 ```
-
 ## Testing
 To run tests, use the following commands:
 ```bash
@@ -131,9 +130,15 @@ Comprehensive API documentation is available and generated using OpenAI's tools.
 ## Postman Documentation
 Example API usage and endpoints are documented in Postman. You can access the Postman documentation here: https://documenter.getpostman.com/view/19781070/2sA3rwNuMM.
 
-
 ## Contributing
 Feel free to submit issues or pull requests. For major changes, please open an issue first to discuss what you would like to change.
 
+## Todo
+I had a lot of fun building this but there are some improvements I can still make:
+
+- Add more test cases
+- Have a standard response helper
+- Include a makefile to ease the execution of some common tasks
+- Health Checks and Auto-healing: Implement health checks and auto-healing mechanisms to ensure high -  availability.
 ## License
 This project is licensed under the MIT License.
