@@ -12,8 +12,8 @@ import { HttpModule, HttpService } from '@nestjs/axios';
 import { AxiosModule } from './common/axios/axios.module';
 import { RedisService } from './modules/redis/redis.service';
 import { ConfigService } from '@nestjs/config';
-import { CachService } from './modules/utils/cache_utils';
-import { UtilsCacheModule } from './modules/utils/cach_utils.module';
+import { CacheService } from './modules/utils/cache_utils';
+import { UtilsCacheModule } from './modules/utils/cache_utils.module';
 import { PrometheusModule } from '@willsoto/nestjs-prometheus';
 
 @Module({
@@ -33,7 +33,7 @@ import { PrometheusModule } from '@willsoto/nestjs-prometheus';
   providers: [
     AppService,
     RedisService,
-    CachService,
+    CacheService,
     ConfigService,
     CountriesService,
     HttpService,

@@ -9,14 +9,14 @@ import { AXIOS_INSTANCE_TOKEN } from '../../common/axios/axios.provider';
 import { CountryQueryDto } from './dto/country-query.dto';
 import { CountryDetailsDto } from './dto/country-details.dto';
 import { CustomLogger } from '../customLogger/custom_logger.service';
-import { CachService } from '../utils/cache_utils';
+import { CacheService } from '../utils/cache_utils';
 import { CustomHttpException } from '../../common/error/custom-exception-error';
 
 @Injectable()
 export class CountriesService {
   constructor(
     private readonly logger: CustomLogger,
-    private readonly cachService: CachService,
+    private readonly cacheService: CacheService,
     @Inject(AXIOS_INSTANCE_TOKEN) private readonly http: AxiosInstance,
   ) {}
 
@@ -43,9 +43,9 @@ export class CountriesService {
 
   async fetchAllCountries(query: CountryQueryDto) {
     const { region, sortBy, page = 1, limit = 10 } = query;
-    const cacheKey = this.cachService.generateCacheKey('countries', query);
+    const cacheKey = this.cacheService.generateCacheKey('countries', query);
 
-    return this.cachService.getCachedData(cacheKey, async () => {
+    return this.cacheService.getCachedData(cacheKey, async () => {
       try {
         const countries = await this.fetchData('/all');
 
@@ -89,9 +89,9 @@ export class CountriesService {
 
   async getCountryByName(name: string): Promise<CountryDetailsDto> {
 
-    const cacheKey = this.cachService.generateCacheKey('country', { name });
+    const cacheKey = this.cacheService.generateCacheKey('country', { name });
 
-    return this.cachService.getCachedData(cacheKey, async () => {
+    return this.cacheService.getCachedData(cacheKey, async () => {
       try {
         const countries = await this.fetchData(`/name/${name}`);
         const country = countries[0];
@@ -122,9 +122,9 @@ export class CountriesService {
   }
 
   public async fetchCountriesByRegion(region: string): Promise<any[]> {
-    const cacheKey = this.cachService.generateCacheKey('region', { region });
+    const cacheKey = this.cacheService.generateCacheKey('region', { region });
 
-    return this.cachService.getCachedData(cacheKey, async () => {
+    return this.cacheService.getCachedData(cacheKey, async () => {
       const countries = await this.fetchData(`/region/${region}`);
       this.logger.log(
         `Fetched ${countries.length} countries for region ${region}`,
@@ -134,9 +134,9 @@ export class CountriesService {
   }
 
   async fetchRegions(): Promise<any> {
-    const cacheKey = this.cachService.generateCacheKey('regions');
+    const cacheKey = this.cacheService.generateCacheKey('regions');
 
-    return this.cachService.getCachedData(cacheKey, async () => {
+    return this.cacheService.getCachedData(cacheKey, async () => {
       const regionsList = [
         'Africa',
         'Americas',
@@ -169,9 +169,9 @@ export class CountriesService {
   }
 
   async fetchLanguages(): Promise<any> {
-    const cacheKey = this.cachService.generateCacheKey('languages');
+    const cacheKey = this.cacheService.generateCacheKey('languages');
 
-    return this.cachService.getCachedData(cacheKey, async () => {
+    return this.cacheService.getCachedData(cacheKey, async () => {
       const countries = await this.fetchData('/all');
       const languages = {};
 
@@ -195,9 +195,9 @@ export class CountriesService {
   }
 
   async fetchStatistics(): Promise<any> {
-    const cacheKey = this.cachService.generateCacheKey('statistics');
+    const cacheKey = this.cacheService.generateCacheKey('statistics');
 
-    return this.cachService.getCachedData(cacheKey, async () => {
+    return this.cacheService.getCachedData(cacheKey, async () => {
       const countries = await this.fetchData('/all');
       const totalCountries = countries.length;
       let largestCountry = countries[0];

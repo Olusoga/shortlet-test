@@ -3,7 +3,7 @@ import { CustomLogger } from '../customLogger/custom_logger.service';
 import { RedisService } from '../redis/redis.service';
 
 @Injectable()
-export class CachService {
+export class CacheService {
   constructor(
     private readonly logger: CustomLogger,
     private readonly redisService: RedisService,
