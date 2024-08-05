@@ -62,7 +62,7 @@ src/
 │   ├── utils/
 │   │   ├── cache_utils.ts
 │   │   ├── cache_utils.module.ts
-|   |   ├── cach_module.ts
+|   |   ├── cache_module.ts
 |   |   ├── logging.ts
 │   └── customLogger/
 │       ├── custom_logger.service.ts
